@@ -63,6 +63,7 @@ class Random4 (Player):
 
         # We create an attribute to keep track of visited cells
         self.visited_cells = set()
+        self.trajectory = []
        
     #############################################################################################################################################
     #                                                               PYRAT METHODS                                                               #
