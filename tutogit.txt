@@ -1,0 +1,11 @@
+Je suis dans la bonne branche:
+git pull [nom de la branche]  <- si quelqun a changer sur le web
+git add .
+git commit -m "commentaire sur le commit"
+git push
+
+
+Je veux changer de branche:
+je réalise les etapes d'avant 
+git checkout [nom de la branche]
+git pull [nom de la branche]
