@@ -69,6 +69,12 @@ class Random4 (Player):
     #                                                               PYRAT METHODS                                                               #
     #############################################################################################################################################
 
+
+    @override
+    def preprocessing(self: Self, maze: Maze, game_state: GameState) -> None:
+        self.trajectory.append(game_state.player_locations[self.name])
+
+        return None
     @override
     def turn ( self:       Self,
                maze:       Maze,
@@ -90,7 +96,7 @@ class Random4 (Player):
         # Mark current cell as visited
         if game_state.player_locations[self.name] not in self.visited_cells:
             self.visited_cells.add(game_state.player_locations[self.name])
-
+        self.trajectory.append(game_state.player_locations[self.name])
         # Return an action
         action = self.find_next_action(maze, game_state)
         return action
@@ -121,10 +127,10 @@ class Random4 (Player):
         unvisited_neighbors = [neighbor for neighbor in neighbors if neighbor not in self.visited_cells]
         if len(unvisited_neighbors) > 0:
             neighbor = random.choice(unvisited_neighbors)
-            
         # If there is no unvisited neighbor, choose one randomly
         else:
-            neighbor = random.choice(neighbors)
+            self.trajectory.pop()
+            neighbor = self.trajectory.pop()
         
         # Retrieve the corresponding action
         action = maze.locations_to_action(game_state.player_locations[self.name], neighbor)
