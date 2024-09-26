@@ -25,7 +25,7 @@ from pyrat import Player, Maze, GameState, Action
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class Random4 (Player):
+class Random5 (Player):
 
     """
         This player is an improvement of the Random2 player.
@@ -69,6 +69,13 @@ class Random4 (Player):
     #                                                               PYRAT METHODS                                                               #
     #############################################################################################################################################
 
+
+    @override
+    def preprocessing(self: Self, maze: Maze, game_state: GameState) -> None:
+        self.newmaze = self.simplify_maze(self,maze,game_state)
+        self.trajectory.append(game_state.player_locations[self.name])
+
+        return None
     @override
     def turn ( self:       Self,
                maze:       Maze,
@@ -90,9 +97,9 @@ class Random4 (Player):
         # Mark current cell as visited
         if game_state.player_locations[self.name] not in self.visited_cells:
             self.visited_cells.add(game_state.player_locations[self.name])
-
+        self.trajectory.append(game_state.player_locations[self.name])
         # Return an action
-        action = self.find_next_action(maze, game_state)
+        action = self.find_next_action(self.newmaze, game_state)
         return action
 
     #############################################################################################################################################
@@ -121,14 +128,28 @@ class Random4 (Player):
         unvisited_neighbors = [neighbor for neighbor in neighbors if neighbor not in self.visited_cells]
         if len(unvisited_neighbors) > 0:
             neighbor = random.choice(unvisited_neighbors)
-            
         # If there is no unvisited neighbor, choose one randomly
         else:
-            neighbor = random.choice(neighbors)
+            self.trajectory.pop()
+            neighbor = self.trajectory.pop()
         
         # Retrieve the corresponding action
         action = maze.locations_to_action(game_state.player_locations[self.name], neighbor)
         return action
+    
+    def simplify_maze(self:Self,maze: Maze,gamestate: GameState)-> Maze:
+        """
+        This function simplifies the maze by removing all dead ends
+        """
+        newmaze = maze
+        had_changed = True
+        while had_changed:
+            had_changed = False
+            for location in newmaze.vertices():
+                if (len(newmaze.get_neighbors(location)) == 1 and location not in GameState.cheese and location!=gamestate.player_locations[self.name]):
+                    newmaze.remove_vertex(location)
+                    had_changed = True
+        return newmaze
     
 #####################################################################################################################################################
 #####################################################################################################################################################
