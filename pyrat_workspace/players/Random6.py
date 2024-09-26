@@ -25,7 +25,7 @@ from pyrat import Player, Maze, GameState, Action
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class Random5 (Player):
+class Random6 (Player):
 
     """
         This player is an improvement of the Random2 player.
@@ -127,7 +127,12 @@ class Random5 (Player):
         neighbors = maze.get_neighbors(game_state.player_locations[self.name])
         unvisited_neighbors = [neighbor for neighbor in neighbors if neighbor not in self.visited_cells]
         if len(unvisited_neighbors) > 0:
-            neighbor = random.choice(unvisited_neighbors)
+            (minei,dist) = (unvisited_neighbors[0],self.distance(self.newmaze,unvisited_neighbors[0],game_state.cheese[0]))
+            for cheese in game_state.cheese:
+                for neib in unvisited_neighbors:
+                    if(self.distance(self.newmaze,neib,cheese)<dist):
+                        (minei,dist) = (neib,self.distance(self.newmaze,neib,cheese))
+                neighbor = minei
         # If there is no unvisited neighbor, choose one randomly
         else:
             self.trajectory.pop()
@@ -151,5 +156,13 @@ class Random5 (Player):
                     had_changed = True
         return newmaze
     
+
+    def distance(self:Self,maze: Maze,start,end):
+        """
+        This function returns the distance between two points in the maze
+        """
+        diff = maze.coords_difference(start,end)
+
+        return (diff[0]**2 + diff[1]**2)**0.5   
 #####################################################################################################################################################
 #####################################################################################################################################################
