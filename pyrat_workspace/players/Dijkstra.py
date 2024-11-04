@@ -9,7 +9,6 @@
 """
 
 
-
 #####################################################################################################################################################
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
@@ -20,13 +19,14 @@ from typing_extensions import *
 from numbers import *
 
 # PyRat imports
-from pyrat import Player, Maze, GameState, Action
+from pyrat import Player, Maze, GameState, Action, Graph
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class TemplatePlayer (Player):
+
+class Dijkstra (Player):
 
     """
         This player is basically a player that does nothing except printing the phase of the game.
@@ -39,11 +39,10 @@ class TemplatePlayer (Player):
     #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
 
-    def __init__ ( self:     Self,
-                   *args:    Any,
-                   **kwargs: Any
-                 ) ->        Self:
-
+    def __init__(self:     Self,
+                 *args:    Any,
+                 **kwargs: Any
+                 ) -> Self:
         """
             This function is the constructor of the class.
             When an object is instantiated, this method is called to initialize the object.
@@ -63,17 +62,16 @@ class TemplatePlayer (Player):
 
         # Print phase of the game
         print("Constructor")
-       
+
     #############################################################################################################################################
     #                                                               PYRAT METHODS                                                               #
     #############################################################################################################################################
 
     @override
-    def preprocessing ( self:       Self,
-                        maze:       Maze,
-                        game_state: GameState,
-                      ) ->          None:
-        
+    def preprocessing(self:       Self,
+                      maze:       Maze,
+                      game_state: GameState,
+                      ) -> None:
         """
             This method redefines the method of the parent class.
             It is called once at the beginning of the game.
@@ -84,18 +82,20 @@ class TemplatePlayer (Player):
             Out:
                 * None.
         """
-        
-        # Print phase of the game
-        print("Preprocessing")
-
-    #############################################################################################################################################
+        print("dfsdf")
+        trans = self.traversal(maze, game_state.player_locations[self.name])
+        print(trans)
+        print(game_state.cheese[0])
+        print("route", self.find_route(
+            trans[1], game_state.player_locations[self.name], game_state.cheese[0]))
+        self.actions = maze.locations_to_actions(self.find_route(
+            trans[1], game_state.player_locations[self.name], game_state.cheese[0]))
 
     @override
-    def turn ( self:       Self,
-               maze:       Maze,
-               game_state: GameState,
-             ) ->          Action:
-
+    def turn(self:       Self,
+             maze:       Maze,
+             game_state: GameState,
+             ) -> Action:
         """
             This method redefines the abstract method of the parent class.
             It is called at each turn of the game.
@@ -112,17 +112,16 @@ class TemplatePlayer (Player):
         print("Turn", game_state.turn)
 
         # Return an action
-        return Action.NOTHING
+        return self.actions.pop(0)
 
 #############################################################################################################################################
 
     @override
-    def postprocessing ( self:       Self,
-                         maze:       Maze,
-                         game_state: GameState,
-                         stats:      Dict[str, Any],
-                       ) ->          None:
-
+    def postprocessing(self:       Self,
+                       maze:       Maze,
+                       game_state: GameState,
+                       stats:      Dict[str, Any],
+                       ) -> None:
         """
             This method redefines the method of the parent class.
             It is called once at the end of the game.
@@ -137,6 +136,85 @@ class TemplatePlayer (Player):
 
         # Print phase of the game
         print("Postprocessing")
+
+    def find_route(self:          Self,
+                   routing_table: Dict[Integral, Optional[Integral]],
+                   source:        Integral,
+                   target:        Integral
+                   ) -> List[Integral]:
+        """
+            This method finds the route from the source to the target using the routing table.
+            In:
+                * self:          Reference to the current object.
+                * routing_table: The routing table.
+                * source:        The source vertex.
+                * target:        The target vertex.
+            Out:
+                * route: The route from the source to the target.
+        """
+        route = [target]
+        while (route[-1] != source):
+            print(route[-1])
+            nexts = routing_table[route[-1]]
+            if nexts is None or type(nexts) is not int:
+                break
+            route.append(nexts)
+        List.reverse(route)
+        return route
+        #############################################################################################################################################
+
+    def get_unvisited_min(self, visited, distances):
+        min_val = -1
+        min = -1
+        for key in distances:
+            if key not in visited:
+                if min == -1:
+                    min = distances[key]
+                    min_val = key
+                else:
+                    if (distances[key] < min):
+                        min = distances[key]
+                        min_val = key
+        return min_val
+
+    def traversal(self:   Self,
+                  graph:  Graph,
+                  source: Integral
+                  ) -> Tuple[Dict[Integral, Integral], Dict[Integral, Optional[Integral]]]:
+        """
+            This method performs a dijkstra traversal of a weighted graph.
+            It returns the explored vertices with associated distances (whit wheight taken into account).
+            It also returns the routing table, that is, the parent of each vertex in the traversal.
+            In:
+                * self:   Reference to the current object.
+                * graph:  The graph to traverse.
+                * source: The source vertex of the traversal.
+            Out:
+                * distances:     The distances from the source to each explored vertex.
+                * routing_table: The routing table, that is, the parent of each vertex in the traversal (None for the source).
+        """
+        visited = []
+        routing_table = {source: None}
+        distances = {source: 0}
+        visiting = source
+        while visiting != -1:
+            voisins = graph.get_neighbors(visiting)
+            for voisin in voisins:
+                try:
+                    distv = distances[voisin]
+                except:
+                    distv = float('inf')
+                dist_between = graph.get_weight(visiting, voisin)
+                new_dist = dist_between+distances[visiting]
+                if (new_dist < distv):
+                    distances[voisin] = new_dist
+                    routing_table[voisin] = visiting
+            visited.append(visiting)
+            print(visited, distances)
+            visiting = self.get_unvisited_min(visited, distances)
+
+        return (distances, routing_table)
+
 
 #####################################################################################################################################################
 #####################################################################################################################################################

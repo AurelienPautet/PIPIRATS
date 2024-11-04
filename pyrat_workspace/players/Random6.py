@@ -25,6 +25,7 @@ from pyrat import Player, Maze, GameState, Action
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
+
 class Random6 (Player):
 
     """
@@ -39,11 +40,10 @@ class Random6 (Player):
     #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
 
-    def __init__ ( self:     Self,
-                   *args:    Any,
-                   **kwargs: Any
-                 ) ->        Self:
-
+    def __init__(self:     Self,
+                 *args:    Any,
+                 **kwargs: Any
+                 ) -> None:
         """
             This function is the constructor of the class.
             When an object is instantiated, this method is called to initialize the object.
@@ -61,27 +61,26 @@ class Random6 (Player):
         # Inherit from parent class
         super().__init__(*args, **kwargs)
 
-        # We create an attribute to keep track of visited cells
-        self.visited_cells = set()
-        self.trajectory = []
-       
+        #  We create an attribute to keep track of visited cells
+        self.visited_cells: Set[Tuple[int, int]] = set()
+        self.trajectory: List[Tuple[int, int]] = []
+
     #############################################################################################################################################
     #                                                               PYRAT METHODS                                                               #
     #############################################################################################################################################
 
-
     @override
     def preprocessing(self: Self, maze: Maze, game_state: GameState) -> None:
-        self.newmaze = self.simplify_maze(maze,game_state)
+        self.newmaze = self.simplify_maze(maze, game_state)
         self.trajectory.append(game_state.player_locations[self.name])
 
         return None
-    @override
-    def turn ( self:       Self,
-               maze:       Maze,
-               game_state: GameState,
-             ) ->          Action:
 
+    @override
+    def turn(self:       Self,
+             maze:       Maze,
+             game_state: GameState,
+             ) -> Action:
         """
             This method redefines the abstract method of the parent class.
             It is called at each turn of the game.
@@ -106,11 +105,10 @@ class Random6 (Player):
     #                                                               OTHER METHODS                                                               #
     #############################################################################################################################################
 
-    def find_next_action ( self:       Self,
-                           maze:       Maze,
-                           game_state: GameState,
-                         ) ->          Action:
-
+    def find_next_action(self:       Self,
+                         maze:       Maze,
+                         game_state: GameState,
+                         ) -> Action:
         """
             This method returns an action to perform among the possible actions, defined in the Action enumeration.
             Here, the action is chosen randomly among those that don't hit a wall, and that lead to an unvisited cell if possible.
@@ -125,24 +123,28 @@ class Random6 (Player):
 
         # Go to an unvisited neighbor in priority
         neighbors = maze.get_neighbors(game_state.player_locations[self.name])
-        unvisited_neighbors = [neighbor for neighbor in neighbors if neighbor not in self.visited_cells]
+        unvisited_neighbors = [
+            neighbor for neighbor in neighbors if neighbor not in self.visited_cells]
         if len(unvisited_neighbors) > 0:
-            (minei,dist) = (unvisited_neighbors[0],self.distance(self.newmaze,unvisited_neighbors[0],game_state.cheese[0]))
+            (minei, dist) = (unvisited_neighbors[0], self.distance(
+                self.newmaze, unvisited_neighbors[0], game_state.cheese[0]))
             for cheese in game_state.cheese:
                 for neib in unvisited_neighbors:
-                    if(self.distance(self.newmaze,neib,cheese)<dist):
-                        (minei,dist) = (neib,self.distance(self.newmaze,neib,cheese))
+                    if (self.distance(self.newmaze, neib, cheese) < dist):
+                        (minei, dist) = (neib, self.distance(
+                            self.newmaze, neib, cheese))
                 neighbor = minei
-        # If there is no unvisited neighbor, choose one randomly
+        #  If there is no unvisited neighbor, choose one randomly
         else:
             self.trajectory.pop()
             neighbor = self.trajectory.pop()
-        
+
         # Retrieve the corresponding action
-        action = maze.locations_to_action(game_state.player_locations[self.name], neighbor)
+        action = maze.locations_to_action(
+            game_state.player_locations[self.name], neighbor)
         return action
-    
-    def simplify_maze(self:Self,maze: Maze,gamestate: GameState)-> Maze:
+
+    def simplify_maze(self: Self, maze: Maze, gamestate: GameState) -> Maze:
         """
         This function simplifies the maze by removing all dead ends
         """
@@ -151,18 +153,17 @@ class Random6 (Player):
         while had_changed:
             had_changed = False
             for location in newmaze.vertices:
-                if (len(newmaze.get_neighbors(location)) <= 1 and location not in gamestate.cheese and location!=gamestate.player_locations[self.name]):
+                if (len(newmaze.get_neighbors(location)) <= 1 and location not in gamestate.cheese and location != gamestate.player_locations[self.name]):
                     newmaze.remove_vertex(location)
                     had_changed = True
         return newmaze
-    
 
-    def distance(self:Self,maze: Maze,start,end):
+    def distance(self: Self, maze: Maze, start, end):
         """
         This function returns the distance between two points in the maze
         """
-        diff = maze.coords_difference(start,end)
+        diff = maze.coords_difference(start, end)
 
-        return (diff[0]**2 + diff[1]**2)**0.5   
+        return (diff[0]**2 + diff[1]**2)**0.5
 #####################################################################################################################################################
 #####################################################################################################################################################
